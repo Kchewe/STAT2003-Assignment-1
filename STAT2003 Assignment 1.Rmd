@@ -1,0 +1,68 @@
+
+```{r}
+#install.packages("ISLR")
+#install.packages("caret")
+#install.packages("e1071")
+#install.packages("randomforest")
+```
+
+
+```{r}
+library(ISLR)
+library(caret)
+library(e1071)
+library(randomForest)
+```
+
+```{r}
+
+set.seed(000)
+data(Default)
+Default$default <- factor(Default$default, levels = c("No", "Yes"))
+head(Default)
+
+```
+
+```{r}
+ctrl <- trainControl(method = "repeatedcv",
+                     number = 10,
+                     repeats = 3,          
+                     summaryFunction = twoClassSummary,
+                     classProbs = TRUE,
+                     savePredictions = TRUE)
+```
+
+```{r}
+model_lr  <- train(default ~ ., data = Default, method = "glm",
+                   family = "binomial", trControl = ctrl, metric = "ROC")
+
+model_rf  <- train(default ~ ., data = Default, method = "rf",  
+                   trControl = ctrl, metric = "ROC",
+                   tuneLength = 3)  
+
+model_nb  <- train(default ~ ., data = Default, method = "nb",
+                   trControl = ctrl, metric = "ROC")
+
+model_svm <- train(default ~ ., data = Default, method = "svmLinear",
+                   trControl = ctrl, preProcess = c("center", "scale"),
+  tuneLength = 3)
+```
+
+```{r}
+models <- list(LogisticRegression = model_lr,
+               RandomForest = model_rf,
+               NaiveBayes = model_nb,
+               SVM = model_svm)
+```
+
+```{r}
+res <- resamples(models)
+
+summary(res)
+```
+
+```{r}
+bwplot(res, metric = "ROC",
+       main = "ROC AUC across 30 resamples (3×10 repeated CV)")
+```
+
