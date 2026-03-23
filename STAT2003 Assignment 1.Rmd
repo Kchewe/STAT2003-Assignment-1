@@ -27,7 +27,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
+```{r, warning = FALSE}
 
 library(ISLR)
 library(caret)
@@ -178,8 +178,8 @@ model_rf  <- train(default ~ ., data = Default, method = "rf",
                    trControl = ctrl, metric = "ROC",
                    tuneLength = 3)  
 
-model_nb  <- train(default ~ ., data = Default, method = "nb",
-                   trControl = ctrl, metric = "ROC")
+model_nb  <- suppressWarnings(train(default ~ ., data = Default, method = "nb",
+                   trControl = ctrl, metric = "ROC"))
 
 model_svm <- train(default ~ ., data = Default, method = "svmLinear",
                    trControl = ctrl, preProcess = c("center", "scale"),
