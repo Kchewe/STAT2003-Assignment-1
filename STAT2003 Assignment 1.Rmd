@@ -19,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r}
+
 library(ISLR)
 library(caret)
 library(e1071)
@@ -26,7 +27,7 @@ library(randomForest)
 ```
 
 ```{r}
-
+#Obtaining and inspecting the data
 set.seed(000)
 data(Default)
 Default$default <- factor(Default$default, levels = c("No", "Yes"))
@@ -35,6 +36,7 @@ head(Default)
 ```
 
 ```{r}
+#Control of the experiment (Conditions that remain the same for all 4 models)
 ctrl <- trainControl(method = "repeatedcv",
                      number = 10,
                      repeats = 3,          
@@ -44,6 +46,7 @@ ctrl <- trainControl(method = "repeatedcv",
 ```
 
 ```{r}
+#Training the models
 model_lr  <- train(default ~ ., data = Default, method = "glm",
                    family = "binomial", trControl = ctrl, metric = "ROC")
 
@@ -60,6 +63,7 @@ model_svm <- train(default ~ ., data = Default, method = "svmLinear",
 ```
 
 ```{r}
+#Creating a list of all four models
 models <- list(LogisticRegression = model_lr,
                RandomForest = model_rf,
                NaiveBayes = model_nb,
@@ -67,12 +71,14 @@ models <- list(LogisticRegression = model_lr,
 ```
 
 ```{r}
+#Summary of resampling results
 res <- resamples(models)
 
 summary(res)
 ```
 
 ```{r}
+#Creates resamples that compares ROC across 30 resamples 
 bwplot(res, metric = "ROC",
        main = "ROC AUC across 30 resamples (3×10 repeated CV)")
 ```
