@@ -1,4 +1,15 @@
 
+---
+title: 'STAT2003: Assignment 1'
+author: "Samantha Clements and Kafula Chewe"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 ```{r}
 #install.packages("ISLR")
 #install.packages("caret")
