@@ -1,11 +1,4 @@
 
----
-<<<<<<< HEAD
-title: Title
-author: Authors
-output: word_document
----
-
 =======
 title: 'STAT2003: Assignment 1'
 author: "Samantha Clements and Kafula Chewe"
@@ -18,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 >>>>>>> cd2e42b047ba298b0c430a72971b1b9ceeeeaf72
+=======
+>>>>>>> db47a9d (Added title and authors)
 ```{r}
 # install.packages("ISLR", dependencies = TRUE)
 # install.packages("caret", dependencies = TRUE)
@@ -26,9 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("DiagrammeR", dependencies = TRUE)
 ```
 
-
-```{r, warning = FALSE}
-
+```{r}
 library(ISLR)
 library(caret)
 library(e1071)
@@ -146,10 +139,16 @@ DOE_Diagram <- grViz("digraph{
 DOE_Diagram
 ```
 
+QUESTION 2
+To conduct this experiment a Randomised Block Design (RBD) was used to compare the four different machine learning algorithms. 
+The experimental factor was the algorithm with the four levels being represented by the the machine learning algorithms: Logistic Regression, Random Forrest, Naive Bayes and Support Vector Machine. The response variable is ROC AUC which explains how good the algorithms are determining whether someone defaulted or not. To control background variation due to random partitioning, that is, one split making one algorithm look better than another the experiment contains repeated 10-fold cross validation with 3 repeats, therefore, creating 30 resampling blocks. To ensure that it was a fair comparison, within each block all four algorithms were tested under the same split. 
 
+The results below show differences in the ROC averages across all four algorithms. Logistic Regression had the highest ROC with Naive Bayes being closely behind while Random forrest was lower on average and SVM had the most variability. The boxplot further shows that Logistic Regression is not only stronger on average but is stable across all blocks. 
+
+On the basis of ROC mean, the experiment suggests that logistic regression provides the strongest overall best performance.
 
 ```{r}
-#Obtaining and inspecting the data
+
 set.seed(000)
 data(Default)
 Default$default <- factor(Default$default, levels = c("No", "Yes"))
@@ -158,7 +157,6 @@ head(Default)
 ```
 
 ```{r}
-#Control of the experiment (Conditions that remain the same for all 4 models)
 ctrl <- trainControl(method = "repeatedcv",
                      number = 10,
                      repeats = 3,          
@@ -170,7 +168,6 @@ ctrl <- trainControl(method = "repeatedcv",
 
 
 ```{r}
-#Training the models
 model_lr  <- train(default ~ ., data = Default, method = "glm",
                    family = "binomial", trControl = ctrl, metric = "ROC")
 
@@ -178,8 +175,8 @@ model_rf  <- train(default ~ ., data = Default, method = "rf",
                    trControl = ctrl, metric = "ROC",
                    tuneLength = 3)  
 
-model_nb  <- suppressWarnings(train(default ~ ., data = Default, method = "nb",
-                   trControl = ctrl, metric = "ROC"))
+model_nb  <- train(default ~ ., data = Default, method = "nb",
+                   trControl = ctrl, metric = "ROC")
 
 model_svm <- train(default ~ ., data = Default, method = "svmLinear",
                    trControl = ctrl, preProcess = c("center", "scale"),
@@ -189,7 +186,6 @@ model_svm <- train(default ~ ., data = Default, method = "svmLinear",
 
 
 ```{r}
-#Creating a list of all four models
 models <- list(LogisticRegression = model_lr,
                RandomForest = model_rf,
                NaiveBayes = model_nb,
@@ -197,15 +193,15 @@ models <- list(LogisticRegression = model_lr,
 ```
 
 ```{r}
-#Summary of resampling results
 res <- resamples(models)
 
 summary(res)
 ```
 
 ```{r}
-#Creates resamples that compares ROC across 30 resamples 
 bwplot(res, metric = "ROC",
        main = "ROC AUC across 30 resamples (3×10 repeated CV)")
 ```
 
+QUESTION 3
+Logistic Regression Suggestion (Limitation based on one dataset)
