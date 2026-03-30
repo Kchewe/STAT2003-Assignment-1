@@ -1,36 +1,48 @@
 
-=======
+---
 title: 'STAT2003: Assignment 1'
 author: "Samantha Clements and Kafula Chewe"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
->>>>>>> cd2e42b047ba298b0c430a72971b1b9ceeeeaf72
-=======
->>>>>>> db47a9d (Added title and authors)
-```{r}
+```{r Install Packages, include=FALSE}
 # install.packages("ISLR", dependencies = TRUE)
 # install.packages("caret", dependencies = TRUE)
 # install.packages("e1071", dependencies = TRUE)
 # install.packages("randomForest", dependencies = TRUE)
 # install.packages("DiagrammeR", dependencies = TRUE)
+
 ```
 
-```{r}
+
+```{r Library, include=FALSE}
 library(ISLR)
-library(caret)
 library(e1071)
 library(randomForest)
 library(DiagrammeR)
+library(caret)
 
 ```
 
-```{r DOE Diagram}
+# Machine Learning Algorithms Comparison
+
+This experiment evaluates the effectiveness of four machine learning methods: Logistic Regression (LR), Random Forest (RF), Naive Bayes (NB), and Support Vector Machine (SVM). The comparison involved the models ability to accurately and precisely predict credit card defaults using the Default data set from the ISLR package in R (James et al. 2013). 
+
+(justification of response)
+
+The experiment is subject to the four principles of experimental design (Montgomery 2020). Randomisation was conducted through the random assignment of observations to cross-validation (CV) fold, with set.seed(123), to ensure reproducibility across all models.
+
+
+
+```{r DOE Diagram, echo = FALSE }
 # sources:
 # https://www.sesync.org/resources/creating-visualizations-diagrammer 
 # clusters: https://graphviz.org/pdf/dotguide.pdf
@@ -147,16 +159,21 @@ The results below show differences in the ROC averages across all four algorithm
 
 On the basis of ROC mean, the experiment suggests that logistic regression provides the strongest overall best performance.
 
-```{r}
-
+```{r Data Obtain and Inspect, echo = FALSE}
 set.seed(000)
+#Obtaining and inspecting the data
 data(Default)
 Default$default <- factor(Default$default, levels = c("No", "Yes"))
 head(Default)
 
+table(Default$default)
+
 ```
 
-```{r}
+<<<<<<< HEAD
+```{r Experiment Control, include = FALSE}
+#Control of the experiment (Conditions that remain the same for all 4 models)
+
 ctrl <- trainControl(method = "repeatedcv",
                      number = 10,
                      repeats = 3,          
@@ -167,7 +184,8 @@ ctrl <- trainControl(method = "repeatedcv",
 
 
 
-```{r}
+```{r Model Training, echo = FALSE}
+#Training the models
 model_lr  <- train(default ~ ., data = Default, method = "glm",
                    family = "binomial", trControl = ctrl, metric = "ROC")
 
@@ -183,25 +201,50 @@ model_svm <- train(default ~ ., data = Default, method = "svmLinear",
   tuneLength = 3)
 ```
 
-
-
-```{r}
+```{r Models Listed, include = FALSE}
+#Creating a list of all four models
 models <- list(LogisticRegression = model_lr,
                RandomForest = model_rf,
                NaiveBayes = model_nb,
                SVM = model_svm)
 ```
 
-```{r}
+```{r Resampling Summary, echo = FALSE}
+#Summary of resampling results
 res <- resamples(models)
 
 summary(res)
 ```
 
-```{r}
+
+```{r ROC Plot, echo = FALSE}
+#Creates resamples that compares ROC across 30 resamples 
 bwplot(res, metric = "ROC",
        main = "ROC AUC across 30 resamples (3×10 repeated CV)")
 ```
 
+
 QUESTION 3
 Logistic Regression Suggestion (Limitation based on one dataset)
+
+```{r References, include = FALSE}
+
+# Chicago 17th Author-Date. NOTE: I will update .bib file later
+#
+
+## (Montgomery 2020)
+# Montgomery, Douglas C. 2020. Design and Analysis of Experiments. 1st ed. Hoboken, NJ: Wiley.
+
+## (Kleijnen 2008)
+# Kleijnen, Jack P. C. 2008. Design and Analysis of Simulation Experiments. 1st ed. New York: Springer-Verlag.
+#
+
+
+
+## (James et al. 2013)
+# James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2013. An Introduction to Statistical Learning. Vol. 112. New York: Springer.
+
+
+
+```
+
