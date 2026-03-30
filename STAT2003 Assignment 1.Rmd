@@ -13,6 +13,7 @@ bibliography: references.bib
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+<<<<<<< HEAD
 ```{r Install Packages, include=FALSE}
 # install.packages("ISLR", dependencies = TRUE)
 # install.packages("caret", dependencies = TRUE)
@@ -21,6 +22,9 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("DiagrammeR", dependencies = TRUE)
 
 ```
+=======
+
+>>>>>>> b556a26 (DOE diagram)
 
 
 ```{r Library, include=FALSE}
@@ -170,10 +174,125 @@ table(Default$default)
 
 ```
 
-<<<<<<< HEAD
 ```{r Experiment Control, include = FALSE}
-#Control of the experiment (Conditions that remain the same for all 4 models)
+install.packages("DiagrammeR", dependencies = TRUE)
+```
 
+```{r DOE Diagram}
+# sources:
+# https://www.sesync.org/resources/creating-visualizations-diagrammer 
+# clusters: https://graphviz.org/pdf/dotguide.pdf
+
+# install.packages("DiagrammeR", dependencies = TRUE)
+library(DiagrammeR)
+
+DOE_Diagram <- grViz("digraph{
+         
+                     graph[layout = dot, rankdir = LR, splines = line] # Left to Right
+                     
+                     node[shape = rectangle, style = filled]
+                     
+                    # Central box
+                    
+                    centre_box [label = '\n\n\nDOE\n\n\n\n', 
+                    shape = box, fillcolor = lightblue, width = 3]\
+                    
+                    # Inputs
+                    
+                    subgraph cluster_input {
+                    
+                    
+                    X1 [label = 'X1: Model Type: \nLogistic Regression,\nRandom Forest,\nNaive Bayes,\nSupport Vector Machine']
+                    
+                    {rank = same
+                    edge [constraint = false, style = invis]
+                    
+                    # Vertically stacked
+                    X1 }
+                    
+                    }
+                    
+                    
+                    # Noise
+                    subgraph cluster_noise {
+                    
+                    N1 [label = 'N1: Random Sampling Variation']
+                    N2 [label = 'N2: Model Randomness']
+                    N3 [label = 'N3: CV Fold Assignment Randomness']
+                    
+                    {edge [style = invis]
+                    
+                    # Horizontally stacked
+                    N1 -> N2 -> N3}
+                    
+                    }
+                    
+                    
+                    # Constants
+                    subgraph cluster_constants {
+                    
+                    
+                    
+                    C1 [label = 'C1: Same random seed - set.seed(000)']
+                    C2 [label = 'C2: Same Dataset - Default (ISLR)']
+                    C3 [label = 'C3: CV - 10 folds, 3 repeats']
+                    C4 [label = 'C4: Model Hyperparameters']
+                    
+                    
+                    {edge [style = invis]
+                    
+                    # Horizontally stacked
+                    C1 -> C2 -> C3 -> C4}
+                    }
+                    
+                  
+                    # Outputs
+                    subgraph cluster_outputs {
+                    
+                    Y1 [label = 'Y1: AUC-ROC']
+                    Y2 [label = 'Y2: Precision']
+                    Y3 [label = 'Y3: Recall']
+                    
+                    {rank = same
+                    edge [constraint = false, style = invis]
+                    
+                    # Vertically stacked
+                    Y1 -> Y2 -> Y3}
+                    
+                    }
+                   
+                  
+                    # Arrows
+                    
+                    edge [arrowhead = normal, style = solid]
+                    X1 -> centre_box [minlen = 2]
+                   
+                    edge [arrowhead = normal, style = solid]
+                    centre_box -> Y1 [minlen = 2.5]
+                    centre_box -> Y2
+                    centre_box -> Y3
+                    
+                    edge [constraint = false, arrowhead = normal, style = solid]
+                    
+                    N1 -> centre_box:s [minlen = 3] 
+                    N2 -> centre_box:s [minlen = 3] 
+                    N3 -> centre_box:s [minlen = 3]
+                    
+                    edge [constraint = false, arrowhead = normal, style = solid]
+                    C1 -> centre_box:n [minlen = 3]
+                    C2 -> centre_box:n [minlen = 3]
+                    C3 -> centre_box:n [minlen = 3]
+                    C4 -> centre_box:n [minlen = 3]
+                    
+                    
+                     }")
+ 
+DOE_Diagram
+```
+
+
+```{r}
+(DOE diagram)
 ctrl <- trainControl(method = "repeatedcv",
                      number = 10,
                      repeats = 3,          
