@@ -156,12 +156,13 @@ DOE_Diagram
 ```
 
 QUESTION 2
-To conduct this experiment a Randomised Block Design (RBD) was used to compare the four different machine learning algorithms. 
-The experimental factor was the algorithm with the four levels being represented by the the machine learning algorithms: Logistic Regression, Random Forrest, Naive Bayes and Support Vector Machine. The response variable is ROC AUC which explains how good the algorithms are determining whether someone defaulted or not. To control background variation due to random partitioning, that is, one split making one algorithm look better than another the experiment contains repeated 10-fold cross validation with 3 repeats, therefore, creating 30 resampling blocks. To ensure that it was a fair comparison, within each block all four algorithms were tested under the same split. 
+To conduct this experiment a Randomised Block Design (RBD) was used to compare the four different machine learning algorithms on their ability to predict credit card default. 
+The experimental factor was the algorithm with the four levels being represented by the the machine learning algorithms: Logistic Regression, Random Forrest, Naive Bayes and Support Vector Machine. The response variable is ROC AUC which explains how good the algorithms are determining whether someone defaulted or not, a higher value indicates good performance. ROC AUC was chosen because the data shows class imbalance, that is, fewer default cases than non-default cases (more No than Yes), hence, making accuracy an unreliable performance metric. To control background variation due to random partitioning, that is, one split making one algorithm look better than another the experiment contains repeated 10-fold cross validation with 3 repeats, therefore, creating 30 resampling blocks. To ensure that it was a fair comparison, within each block all four algorithms were tested under the same split. This means the experiment follows the principles of randomisation by resampling, replication through repeated evaluation and blocking as the shared splits act as blocks.
 
-The results below show differences in the ROC averages across all four algorithms. Logistic Regression had the highest ROC with Naive Bayes being closely behind while Random forrest was lower on average and SVM had the most variability. The boxplot further shows that Logistic Regression is not only stronger on average but is stable across all blocks. 
+The results below show differences in the ROC averages across all four algorithms. Logistic Regression and Naive Bayes had the highest ROC values and showed fairly stable performance across all blocks. Random Forrest performed moderately whereas SVM showed inconsistent behaviour across resamples. SVM may appear to be performing well in some cases, however, this may be misleading due to the class imbalance that exists in the dataset, for instance, a model that predicts most observations as "No default" can still achieve a reasonable accuracy or ROC despite being unable to accurately predict the minority class.
 
-On the basis of ROC mean, the experiment suggests that logistic regression provides the strongest overall best performance.
+The results show that the algorithms do not perform equally with Logistic Regression and Naive Bayes demonstrating a more stable and stronger performance in this experiment.
+(308 words)
 
 ```{r Data Obtain and Inspect, echo = FALSE}
 set.seed(000)
@@ -344,7 +345,9 @@ bwplot(res, metric = "ROC",
 
 
 QUESTION 3
-Logistic Regression Suggestion (Limitation based on one dataset)
+Based on the experimental results, Logistic Regression is recommended for predicting credit card default. It had the highest ROC and showed consistency across resamples (blocks), demonstrating strong discrimination and stability. Though Naive Bayes performed well, Logistic Regression had the best overall performance. 
+A limitation of this recommendation is that it is based on a singular dataset and the chosen resampling design, therefore, the results may differ when presented with new data.
+(71 words)
 
 ```{r References, include = FALSE}
 
