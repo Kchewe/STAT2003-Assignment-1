@@ -223,6 +223,7 @@ models <- list(LogisticRegression = model_lr,
 res <- resamples(models)
 
 summary(res)
+head(res)
 ```
 
 ```{r ROC Plot, echo = FALSE}
@@ -231,27 +232,76 @@ bwplot(res, metric = "ROC",
        main = "ROC AUC across 30 resamples (3×10 repeated CV)")
 ```
 
+```{r}
+
+res_df <- as.data.frame(res)
+# head(res_df)
+
+res_long <- pivot_longer(res_df,
+                         cols = -Resample,
+                         names_to = "Model", values_to = "ROC")
+
+
+```
+
+```{r}
+res_long |>
+  ggplot() +
+  aes(x = ROC, y = Model) +
+  geom_boxplot() +
+  geom_point(aes(colour = Resample), size = 0.6, show.legend = FALSE) +
+  labs(y     = "Models",
+       x     = "AUC-ROC",
+       title = "AUC-ROC across 30 resamples (3×10 repeated CV)") +
+  theme_bw()
+```
+
+
 ```{r Residual Diagnostic Plots}
 
-aov_rbd <- aov(ROC ~ Algorithm + Resample, data = roc_long)
+res_aov <- aov(ROC ~ Model + Resample, data = res_long)
 
 # Visual checks
-
-plot(aov_rbd)  # Residuals vs Fitted, Normal Q-Q
-
+plot(res_aov) 
+#head(res_aov)
 
 # Formal normality test on residuals
-shapiro.test(residuals(aov_rbd))
+shapiro.test(residuals(res_aov))
 
 # Formal homogeneity of variance test
-bartlett.test(ROC ~ Algorithm, data = roc_long)
+bartlett.test(ROC ~ Model, data = res_aov$model)
+
+```
+
+Shapiro: p > 0.05, do not reject H0, normality is satisfied
+Bartlett: p < 0.05, reject H0, equal variance is not satisfied
+
+```{r}
+hist(residuals(res_aov))
+hist(residuals(res_log_aov))
 
 ```
 
 
 ```{r}
-anova(aov_rbd)
+
+# log transform, H0 = equal medians / equal geometric means
+
+y <- log(res_long$ROC)
+
+res_log_aov <- aov(y ~ Model + Resample, data = res_long)
+
+
+plot(res_log_aov)
+
+
+shapiro.test(residuals(res_log_aov))
+bartlett.test(y ~ Model, data = res_log_aov$model)
 ```
+```{r}
+friedman.test(ROC ~ Model | Resample, data = res_long)
+```
+
 
 
 QUESTION 3
