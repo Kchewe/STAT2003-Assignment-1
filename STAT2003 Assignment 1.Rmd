@@ -165,7 +165,7 @@ The results show that the algorithms do not perform equally with Logistic Regres
 (308 words)
 
 ```{r Data Obtain and Inspect, echo = FALSE}
-set.seed(000)
+set.seed(0)
 #Obtaining and inspecting the data
 data(Default)
 Default$default <- factor(Default$default, levels = c("No", "Yes"))
@@ -175,125 +175,9 @@ table(Default$default)
 
 ```
 
-```{r Experiment Control, include = FALSE}
-install.packages("DiagrammeR", dependencies = TRUE)
-```
-
-```{r DOE Diagram}
-# sources:
-# https://www.sesync.org/resources/creating-visualizations-diagrammer 
-# clusters: https://graphviz.org/pdf/dotguide.pdf
-
-# install.packages("DiagrammeR", dependencies = TRUE)
-library(DiagrammeR)
-
-DOE_Diagram <- grViz("digraph{
-         
-                     graph[layout = dot, rankdir = LR, splines = line] # Left to Right
-                     
-                     node[shape = rectangle, style = filled]
-                     
-                    # Central box
-                    
-                    centre_box [label = '\n\n\nDOE\n\n\n\n', 
-                    shape = box, fillcolor = lightblue, width = 3]\
-                    
-                    # Inputs
-                    
-                    subgraph cluster_input {
-                    
-                    
-                    X1 [label = 'X1: Model Type: \nLogistic Regression,\nRandom Forest,\nNaive Bayes,\nSupport Vector Machine']
-                    
-                    {rank = same
-                    edge [constraint = false, style = invis]
-                    
-                    # Vertically stacked
-                    X1 }
-                    
-                    }
-                    
-                    
-                    # Noise
-                    subgraph cluster_noise {
-                    
-                    N1 [label = 'N1: Random Sampling Variation']
-                    N2 [label = 'N2: Model Randomness']
-                    N3 [label = 'N3: CV Fold Assignment Randomness']
-                    
-                    {edge [style = invis]
-                    
-                    # Horizontally stacked
-                    N1 -> N2 -> N3}
-                    
-                    }
-                    
-                    
-                    # Constants
-                    subgraph cluster_constants {
-                    
-                    
-                    
-                    C1 [label = 'C1: Same random seed - set.seed(000)']
-                    C2 [label = 'C2: Same Dataset - Default (ISLR)']
-                    C3 [label = 'C3: CV - 10 folds, 3 repeats']
-                    C4 [label = 'C4: Model Hyperparameters']
-                    
-                    
-                    {edge [style = invis]
-                    
-                    # Horizontally stacked
-                    C1 -> C2 -> C3 -> C4}
-                    }
-                    
-                  
-                    # Outputs
-                    subgraph cluster_outputs {
-                    
-                    Y1 [label = 'Y1: AUC-ROC']
-                    Y2 [label = 'Y2: Precision']
-                    Y3 [label = 'Y3: Recall']
-                    
-                    {rank = same
-                    edge [constraint = false, style = invis]
-                    
-                    # Vertically stacked
-                    Y1 -> Y2 -> Y3}
-                    
-                    }
-                   
-                  
-                    # Arrows
-                    
-                    edge [arrowhead = normal, style = solid]
-                    X1 -> centre_box [minlen = 2]
-                   
-                    edge [arrowhead = normal, style = solid]
-                    centre_box -> Y1 [minlen = 2.5]
-                    centre_box -> Y2
-                    centre_box -> Y3
-                    
-                    edge [constraint = false, arrowhead = normal, style = solid]
-                    
-                    N1 -> centre_box:s [minlen = 3] 
-                    N2 -> centre_box:s [minlen = 3] 
-                    N3 -> centre_box:s [minlen = 3]
-                    
-                    edge [constraint = false, arrowhead = normal, style = solid]
-                    C1 -> centre_box:n [minlen = 3]
-                    C2 -> centre_box:n [minlen = 3]
-                    C3 -> centre_box:n [minlen = 3]
-                    C4 -> centre_box:n [minlen = 3]
-                    
-                    
-                     }")
- 
-DOE_Diagram
-```
-
 
 ```{r}
-(DOE diagram)
+
 ctrl <- trainControl(method = "repeatedcv",
                      number = 10,
                      repeats = 3,          
@@ -302,23 +186,28 @@ ctrl <- trainControl(method = "repeatedcv",
                      savePredictions = TRUE)
 ```
 
-
-
 ```{r Model Training, echo = FALSE}
 #Training the models
+PP <- c("center", "scale")
+
 model_lr  <- train(default ~ ., data = Default, method = "glm",
-                   family = "binomial", trControl = ctrl, metric = "ROC")
+                   family = "binomial", trControl = ctrl, metric = "ROC", preProcess = PP
+                   )
 
 model_rf  <- train(default ~ ., data = Default, method = "rf",  
                    trControl = ctrl, metric = "ROC",
-                   tuneLength = 3)  
+                   tuneLength = 3, preProcess = PP)  
 
+# Non-default hyperparameter, now kernel
 model_nb  <- train(default ~ ., data = Default, method = "nb",
-                   trControl = ctrl, metric = "ROC")
+                   trControl = ctrl, metric = "ROC", 
+                   tuneGrid  = data.frame(fL = 0, usekernel = TRUE, adjust = 1), preProcess = PP)
 
-model_svm <- train(default ~ ., data = Default, method = "svmLinear",
-                   trControl = ctrl, preProcess = c("center", "scale"),
-  tuneLength = 3)
+
+# non-default hyperparameter,
+model_svm <- train(default ~ ., data = Default, method = "svmLinear2",
+                   trControl = ctrl, preProcess = PP,
+                   tuneLength = 3, metric = "ROC")
 ```
 
 ```{r Models Listed, include = FALSE}
@@ -336,11 +225,32 @@ res <- resamples(models)
 summary(res)
 ```
 
-
 ```{r ROC Plot, echo = FALSE}
 #Creates resamples that compares ROC across 30 resamples 
 bwplot(res, metric = "ROC",
        main = "ROC AUC across 30 resamples (3×10 repeated CV)")
+```
+
+```{r Residual Diagnostic Plots}
+
+aov_rbd <- aov(ROC ~ Algorithm + Resample, data = roc_long)
+
+# Visual checks
+
+plot(aov_rbd)  # Residuals vs Fitted, Normal Q-Q
+
+
+# Formal normality test on residuals
+shapiro.test(residuals(aov_rbd))
+
+# Formal homogeneity of variance test
+bartlett.test(ROC ~ Algorithm, data = roc_long)
+
+```
+
+
+```{r}
+anova(aov_rbd)
 ```
 
 
