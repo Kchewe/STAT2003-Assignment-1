@@ -12,7 +12,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-<<<<<<< HEAD
+
 ```{r Install Packages, include=FALSE}
 # install.packages("ISLR", dependencies = TRUE)
 # install.packages("e1071", dependencies = TRUE)
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("car", dependencies = TRUE)
 
 ```
-=======
+
 
 
 
