@@ -19,8 +19,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("randomForest", dependencies = TRUE)
 # install.packages("caret", dependencies = TRUE)
 # install.packages("tidyr", dependencies = TRUE)
-# install.packages("car", dependencies = TRUE)
-# install.packages("emmeans", dependencies = TRUE)
+#install.packages("car", dependencies = TRUE)
+#install.packages("emmeans", dependencies = TRUE)
 
 ```
 
@@ -47,7 +47,7 @@ The primary response is AUC-ROC, referred to as ROC in caret's output. The Defau
 
 The experiment is subject to three principles of experimental design (Montgomery 2020). Randomisation was conducted through random observation assignment to cross-validation (CV) folds with set.seed(123). Replication is achieved via repeated 10-fold CV with 5 repeats, producing 50 resamples. Blocking treats each resample as a block; all models are evaluated on identical splits, removing fold-to-fold variation. Residual diagnostics are conducted prior to formal RBD ANOVA interpretation.
 
-(198 words)
+(195 words)
 
 ```{r DOE Diagram, echo = FALSE, fig.cap="Figure 1: DOE diagram for Default Experiment" }
 knitr::include_graphics("DOE_Diagram.png")
@@ -56,10 +56,17 @@ knitr::include_graphics("DOE_Diagram.png")
 QUESTION 2
 
 
-The results below show differences in the ROC averages across all four algorithms. Logistic Regression and Naive Bayes had the highest ROC values and showed fairly stable performance across all blocks. Random Forrest performed moderately whereas SVM showed inconsistent behaviour across resamples. SVM may appear to be performing well in some cases, however, this may be misleading due to the class imbalance that exists in the dataset, for instance, a model that predicts most observations as "No default" can still achieve a reasonable accuracy or ROC despite being unable to accurately predict the minority class.
+The results below show differences in the ROC averages across all four algorithms. Logistic Regression and Naive Bayes had the highest ROC values and showed fairly stable performance across all blocks. Random Forrest performed moderately whereas SVM showed inconsistent behaviour across resamples. SVM may appear to be performing well in some cases, however, this may be misleading due to the class imbalance that exists in the dataset, for instance, a model that predicts most observations as "No default" can still achieve a reasonable accuracy or ROC despite being unable to accurately predict the minority class which is shown in the zero specificity for SVM.
 
-The results show that the algorithms do not perform equally with Logistic Regression and Naive Bayes demonstrating a more stable and stronger performance in this experiment.
-(308 words)
+A randomized block ANOVA was performed with algorithm as the treatment factor and resamples as the block factor. The results results that there was a statistical difference in the ROC means across algorithms (p < 0.05), which means not all algorithms performed equally. Turkey HSD pairwise comparisons showed that Logistic Regression significantly outperformed Random Forrest and SVM (p < 0.05) but that it was not significantly different from Naive Bayes (p = 0.248)
+
+The estimated marginals means further justify this as they show that Logistic Regression had the highest ROC mean (0.949) and Naive Bayes had quite similar result (0.942) while Random Forrest and SVM performed worse, 0.896 and 0.926 respectively.
+
+Assumption checks shows that normality of residuals was satisfied; however, homogeneity of variance was violated as seen in the Bartlett and Levene tests. Inspite of this, ANOVA is known to be relatively robust to these violations in cases where there is large number of replications. To support these findings, a non-parametric Friedman test was also conducted which confirmed a significant difference between algorithms (p < 0.05) which help justify the conclusions drawn from ANOVA.
+
+Overall, the results suggest that Logistic Regression and Naive Bayes as the best performing algorithms while Random forrest and SVM perform less effectively under this experimental design. 
+
+(314 words)
 
 ```{r Data Obtain and Inspect, echo = FALSE}
 set.seed(123)
@@ -160,6 +167,7 @@ res_long |>
 
 
 ```{r Residual Diagnostic Plots}
+library(car)
 
 res_aov <- aov(ROC ~ Model + Resample, data = res_long)
 
@@ -226,7 +234,7 @@ tukey_res
 ```
 
 ```{r}
-
+library(emmeans)
 emmeans(res_aov, ~ Model)
 ```
 Tukey HSD pairwise comparisons indicate Logistic Regression significantly outperformed Random Forest and SVM (p < 0.001), but was not significantly different from Naive Bayes (p = 0.248). This means LR and NB are statistically comparable in performance.
@@ -244,10 +252,10 @@ So pick LR is best as
 2. not significantly worse than NB, but specificity is nearly double (from summaryres, 0.320 vs 0.169)
 3. significantly outperforms SVM and RF
 
+Based on the experimental results, Logistic Regression is recommended for predicting credit card default. It had the highest ROC and showed consistency across resamples (blocks), demonstrating strong discrimination and stability. Though Naive Bayes performed well, Logistic Regression was not significantly worse and provided a much higher specificity making it more effective for identifying default cases.
 
-Based on the experimental results, Logistic Regression is recommended for predicting credit card default. It had the highest ROC and showed consistency across resamples (blocks), demonstrating strong discrimination and stability. Though Naive Bayes performed well, Logistic Regression had the best overall performance. 
 A limitation of this recommendation is that it is based on a singular dataset and the chosen resampling design, therefore, the results may differ when presented with new data.
-(71 words)
+(86 words)
 
 # References
 
