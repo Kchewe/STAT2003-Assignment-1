@@ -1,11 +1,8 @@
 
 ---
-title: 'STAT2003: Assignment 1'
-author: "Samantha Clements and Kafula Chewe"
-date: "`r Sys.Date()`"
+title: 'STAT2003: Assignment 1: Comparison of Machine Learning Algorithms'
 output:
-  html_document: default
-  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
