@@ -4,8 +4,8 @@ title: 'STAT2003: Assignment 1'
 author: "Samantha Clements and Kafula Chewe"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -41,20 +41,21 @@ library(emmeans)
 
 # Machine Learning Algorithms Comparison
 
-A randomised block design (RBD) experiment was conducted to compare four machine learning algorithms for predicting credit card default using the Default dataset from the ISLR package (James et al. 2013). The experimental factor is algorithm type, with four levels: Logistic Regression (LR), Random Forest (RF), Naive Bayes (NB), and Support Vector Machine (SVM). The experimental design is illustrated in the DOE Diagram (Figure 1).
+## Experimental Design
+A randomised block design (RBD) experiment is conducted to compare four machine learning algorithms for predicting credit card default using the Default dataset from the ISLR package (James et al. 2013). The experimental factor is algorithm type, with four levels: Logistic Regression (LR), Random Forest (RF), Naive Bayes (NB), and Support Vector Machine (SVM), as illustrated in the DOE Diagram (Figure 1).
 
-The primary response is AUC-ROC, referred to as ROC in caret's output. The Default dataset reveals a severe class-imbalance leading to misleading overall  accuracy. Models predicting non-defaulters for all observations achieve roughly 97% accuracy yet have no discriminatory value. AUC-ROC measures each model's ability to distinguish defaulters from non-defaulters and is robust to class imbalance, making it the most appropriate metric (James et al. 2013).
+The primary response is AUC-ROC. The Default dataset reveals a large class-imbalance leading to misleading overall accuracy. Models predicting non-defaulters for all observations achieve 97% accuracy yet have no discriminatory value. AUC-ROC measures each model's ability to distinguish defaulters from non-defaulters, where higher values indicate better discrimination, and is robust to class imbalance, making it the most appropriate metric (James et al. 2013).
 
-The experiment is subject to three principles of experimental design (Montgomery 2020). Randomisation was conducted through random observation assignment to cross-validation (CV) folds with set.seed(123). Replication is achieved via repeated 10-fold CV with 5 repeats, producing 50 resamples. Blocking treats each resample as a block; all models are evaluated on identical splits, removing fold-to-fold variation. Residual diagnostics are conducted prior to formal RBD ANOVA interpretation.
+The experiment is subject to three principles of experimental design (Montgomery 2020). Randomisation is conducted through random observation assignment to cross-validation (CV) folds with set.seed(123). Replication is achieved via repeated 10-fold CV with 5 repeats, producing 50 resamples, each serving as an experimental unit. Blocking treats each resample as a block; all algorithms are evaluated under identical splits, controlling fold-to-fold variation . Residual diagnostics are conducted prior to formal RBD ANOVA interpretation.
 
 (198 words)
-
 ```{r DOE Diagram, echo = FALSE, fig.cap="Figure 1: DOE diagram for Default Experiment" }
 knitr::include_graphics("DOE_Diagram.png")
 ```
 
-QUESTION 2
 
+
+## Performance Results
 
 The results below show differences in the ROC averages across all four algorithms. Logistic Regression and Naive Bayes had the highest ROC values and showed fairly stable performance across all blocks. Random Forrest performed moderately whereas SVM showed inconsistent behaviour across resamples. SVM may appear to be performing well in some cases, however, this may be misleading due to the class imbalance that exists in the dataset, for instance, a model that predicts most observations as "No default" can still achieve a reasonable accuracy or ROC despite being unable to accurately predict the minority class.
 
@@ -154,7 +155,7 @@ res_long |>
   geom_point(aes(colour = Resample), size = 0.6, show.legend = FALSE) +
   labs(y     = "Models",
        x     = "AUC-ROC",
-       title = "AUC-ROC across 50 resamples (5×10 repeated CV)") +
+       title = "Figure 2: AUC-ROC across 50 resamples (5×10 repeated CV)") +
   theme_bw()
 ```
 
@@ -163,22 +164,24 @@ res_long |>
 
 res_aov <- aov(ROC ~ Model + Resample, data = res_long)
 
-# Visual checks
+# visual checks
 plot(res_aov) 
 #head(res_aov)
 
-# Formal normality test on residuals
+# normality test on residuals
 shapiro.test(residuals(res_aov))
 
-# Formal homogeneity of variance test
+# homogeneity of variance test
 bartlett.test(ROC ~ Model, data = res_aov$model)
 
 leveneTest(ROC ~ Model, data = res_long)
 
+# : p > 0.05, do not reject H0, normality is satisfied
+# Bartlett: p < 0.05, reject H0, equal variance is not satisfied
+
 ```
 
-Shapiro: p > 0.05, do not reject H0, normality is satisfied
-Bartlett: p < 0.05, reject H0, equal variance is not satisfied
+
 
 ```{r}
 hist(residuals(res_aov))
@@ -205,20 +208,24 @@ leveneTest(y ~ Model, data = res_long)
 
 hist(residuals(res_log_aov))
 
+# The log transformation makes the model worse. Proceed with initial model
+
 ```
 
 
 
 ```{r}
 anova(res_aov)
+
+# p < 0.001 indicates significant difference among algorithms. 
 ```
-p < 0.001 indicates significant difference among algorithms. 
+
 
 ```{r}
 friedman.test(ROC ~ Model | Resample, data = res_long)
 ```
 
-The log transformation makes the model worse. Proceed with initial model
+
 
 ```{r}
 tukey_res <- TukeyHSD(res_aov, which = "Model")
@@ -237,8 +244,7 @@ Estimated marginal means (Emmean) show Logistic Regression achieved the highest 
 
 
 
-QUESTION 3
-
+## Algorithm Recommendation
 So pick LR is best as 
 1. highest point estimate ROC
 2. not significantly worse than NB, but specificity is nearly double (from summaryres, 0.320 vs 0.169)
@@ -249,7 +255,7 @@ Based on the experimental results, Logistic Regression is recommended for predic
 A limitation of this recommendation is that it is based on a singular dataset and the chosen resampling design, therefore, the results may differ when presented with new data.
 (71 words)
 
-# References
+## References
 
 Kleijnen, Jack P. C. 2008. *Design and Analysis of Simulation Experiments*. 1st ed. New York: Springer-Verlag.
 
@@ -258,9 +264,3 @@ James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2013. *An I
 Montgomery, Douglas C. 2020. *Design and Analysis of Experiments*. 1st ed. Hoboken, NJ: Wiley.
 
 
-
-# Extra Stuff 
-Previous Q2p1
-
-To conduct this experiment a Randomised Block Design (RBD) was used to compare the four different machine learning algorithms on their ability to predict credit card default. 
-The experimental factor was the algorithm with the four levels being represented by the the machine learning algorithms: Logistic Regression, Random Forrest, Naive Bayes and Support Vector Machine. The response variable is ROC AUC which explains how good the algorithms are determining whether someone defaulted or not, a higher value indicates good performance. ROC AUC was chosen because the data shows class imbalance, that is, fewer default cases than non-default cases (more No than Yes), hence, making accuracy an unreliable performance metric. To control background variation due to random partitioning, that is, one split making one algorithm look better than another the experiment contains repeated 10-fold cross validation with 3 repeats, therefore, creating 30 resampling blocks. To ensure that it was a fair comparison, within each block all four algorithms were tested under the same split. This means the experiment follows the principles of randomisation by resampling, replication through repeated evaluation and blocking as the shared splits act as blocks.
