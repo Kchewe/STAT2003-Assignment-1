@@ -74,7 +74,7 @@ table(Default$default)
 ```
 
 
-```{r}
+```{r Control, echo = FALSE}
 set.seed(123)
 ctrl <- trainControl(method = "repeatedcv",
                      number = 10,
@@ -117,7 +117,7 @@ models <- list(LogisticRegression = model_lr,
                SVM = model_svm)
 ```
 
-```{r Resampling Summary, echo = FALSE}
+```{r Resampling Summary, echo = FALSE, include = FALSE}
 #Summary of resampling results
 res <- resamples(models)
 
@@ -135,7 +135,7 @@ bwplot(res, metric = "ROC",
 
 
 
-```{r}
+```{r include = FALSE}
 
 res_df <- as.data.frame(res)
 # head(res_df)
@@ -147,7 +147,7 @@ res_long <- pivot_longer(res_df,
 
 ```
 
-```{r}
+```{r AUC-ROC Boxplot, echo = FALSE}
 res_long |>
   ggplot() +
   aes(x = ROC, y = Model) +
@@ -160,11 +160,12 @@ res_long |>
 ```
 
 
-```{r Residual Diagnostic Plots}
+```{r Residual Diagnostic Plots, echo = FALSE}
 
 res_aov <- aov(ROC ~ Model + Resample, data = res_long)
 
 # visual checks
+par(mfrow = c(2, 2))
 plot(res_aov) 
 #head(res_aov)
 
@@ -179,17 +180,12 @@ leveneTest(ROC ~ Model, data = res_long)
 # : p > 0.05, do not reject H0, normality is satisfied
 # Bartlett: p < 0.05, reject H0, equal variance is not satisfied
 
-```
-
-
-
-```{r}
-hist(residuals(res_aov))
 
 ```
 
 
-```{r}
+
+```{r Residual Diagnostic Plots Log-Transformation, echo = FALSE}
 
 # log transform, H0 = equal medians / equal geometric means
 
@@ -197,16 +193,13 @@ y <- log(res_long$ROC)
 
 res_log_aov <- aov(y ~ Model + Resample, data = res_long)
 
-
+par(mfrow = c(2, 2))
 plot(res_log_aov)
 
 
 shapiro.test(residuals(res_log_aov))
 bartlett.test(y ~ Model, data = res_log_aov$model)
-
 leveneTest(y ~ Model, data = res_long)
-
-hist(residuals(res_log_aov))
 
 # The log transformation makes the model worse. Proceed with initial model
 
@@ -214,25 +207,25 @@ hist(residuals(res_log_aov))
 
 
 
-```{r}
+```{r ANOVA Test, include = FALSE}
 anova(res_aov)
 
 # p < 0.001 indicates significant difference among algorithms. 
 ```
 
 
-```{r}
+```{r Friedman Test, include = FALSE}
 friedman.test(ROC ~ Model | Resample, data = res_long)
 ```
 
 
 
-```{r}
+```{r Tukey HSD, echo = FALSE, include = FALSE}
 tukey_res <- TukeyHSD(res_aov, which = "Model")
 tukey_res
 ```
 
-```{r}
+```{r Emmeans, include = FALSE}
 
 emmeans(res_aov, ~ Model)
 ```
@@ -256,8 +249,6 @@ A limitation of this recommendation is that it is based on a singular dataset an
 (71 words)
 
 ## References
-
-Kleijnen, Jack P. C. 2008. *Design and Analysis of Simulation Experiments*. 1st ed. New York: Springer-Verlag.
 
 James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2013. *An Introduction to Statistical Learning*. Vol. 112. New York: Springer.
 
