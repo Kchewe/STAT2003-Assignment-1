@@ -42,7 +42,8 @@ The experiment is subject to three principles of experimental design (Montgomery
 
 
 ```{r DOE Diagram, echo = FALSE, fig.cap="Figure 1: DOE diagram for Default Experiment" }
-knitr::include_graphics("DOE_Diagram.png")
+# hashed to ensure reproducible knit, unhash for final knit for submission
+# knitr::include_graphics("DOE_Diagram.png")
 ```
 
 # Performance Results
@@ -138,7 +139,7 @@ res_long |>
 
  The RBD ANOVA results show a statistically significant difference in mean AUC-ROC across algorithms at the 5% significance level (p < 0.001), indicating not all algorithms performed equally. A Tukey HSD pairwise comparison showed that Logistic Regression significantly outperformed Random Forest and SVM (p < 0.001) but that it was not significantly different from Naive Bayes (p = 0.248). All other pairwise comparisons were significant at the 5% level. This suggests that Logistic Regression and Naive Bayes are statistically comparable in terms of performance. The estimated marginal means further support the statistical comparability as Logistic Regression had the highest ROC mean (0.949) and Naive Bayes had a similar result (0.942), while Random Forest (0.896) and SVM (0.926) performed worse.
 
-Assumption checks confirm that normality of residuals was satisfied (p = 0.063); however, homogeneity of variance was violated as seen in the Bartlett and Levene tests (p < 0.001). A log transformation was attempted but did not resolve the violation as AUC-ROC values are bounded and approximately symmetric. Despite this, ANOVA is known to be relatively robust to these violations in balanced designs with equal sample sizes (n = 50 per algorithm). As ANOVA assumptions were not fully satisfied, a Friedman test was conducted as a non-parametric sensitivity check confirming a significant difference between algorithms (p < 0.001), supporting the conclusions drawn from the ANOVA.
+Assumption checks confirm that normality of residuals was satisfied (p = 0.063); however, homogeneity of variance was violated as seen in the Bartlett and Levene tests (p < 0.001). A log transformation was attempted but did not resolve the violation as AUC-ROC values are bounded and approximately symmetric. Despite this, ANOVA is known to be relatively robust to these violations in balanced designs with equal sample sizes (Blanca et al. 2018). As ANOVA assumptions were not fully satisfied, a Friedman test was conducted as a non-parametric sensitivity check confirming a significant difference between algorithms (p < 0.001), supporting the conclusions drawn from the ANOVA.
 
 Overall, Logistic Regression and Naive Bayes were the best performing algorithms while Random Forest and SVM performed less effectively under this experimental design. 
 
@@ -219,12 +220,16 @@ emmeans(res_aov, ~ Model)
 
 # Algorithm Recommendation
 
-Based on the experimental results, Logistic Regression is recommended for predicting credit card default. It had the highest mean AUC-ROC and showed consistency across resamples, demonstrating strong discrimination and stability. Though Naive Bayes was not significantly worse, Logistic Regression achieved higher mean specificity (0.319 vs 0.169), making it more effective for identifying default cases.
+Logistic Regression is recommended for predicting credit card default. It had the highest mean AUC-ROC and showed consistency across resamples, demonstrating strong discrimination and stability. Though Naive Bayes was not significantly worse, Logistic Regression achieved higher mean specificity (0.319 vs 0.169), making it more effective for identifying default cases.
 
-A limitation of this recommendation is that it is based on a single dataset and a specific resampling design, therefore, the results may differ when presented with new or differently distributed data. Additionally, Logistic Regression assumes a linear decision boundary, which may not hold in complex real-world credit datasets.
+This recommendation is limited as it is based on a single dataset and a specific resampling design, therefore, the results may differ when presented with new or differently distributed data. Additionally, Logistic Regression assumes a linear decision boundary, which may not hold in complex real-world credit datasets.
+
 
 
 # References
+
+Blanca, María J., Rafael Alarcón, Jaume Arnau, Roser Bono, and Rebecca Bendayan. 2018. “Effect of variance ratio on ANOVA robustness: might 1.5 be the limit?” 
+*Behavior Research Methods* 50: 937–962. https://doi.org/10.3758/s13428-017-0918-2.
 
 James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2013. *An Introduction to Statistical Learning*. Vol. 112. New York: Springer.
 
