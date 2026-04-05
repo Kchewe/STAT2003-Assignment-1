@@ -2,7 +2,8 @@
 ---
 title: 'STAT2003: Assignment 1: Comparison of Machine Learning Algorithms'
 output:
-  word_document: default
+  word_document:
+    fig_caption: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -16,14 +17,10 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("randomForest", dependencies = TRUE)
 # install.packages("caret", dependencies = TRUE)
 # install.packages("tidyr", dependencies = TRUE)
-#install.packages("car", dependencies = TRUE)
-#install.packages("emmeans", dependencies = TRUE)
+# install.packages("car", dependencies = TRUE)
+# install.packages("emmeans", dependencies = TRUE)
 
 ```
-
-
-
-
 
 ```{r Library, include=FALSE}
 library(ISLR)
@@ -35,18 +32,22 @@ library(car)
 library(emmeans)
 
 ```
-# QUESTION 1: Machine Learning Algorithms Comparison
 
-## Experimental Design
+# Experimental Design
 A randomised block design (RBD) experiment is conducted to compare four machine learning algorithms for predicting credit card default using the Default dataset from the ISLR package (James et al. 2013). The experimental factor is algorithm type, with four levels: Logistic Regression (LR), Random Forest (RF), Naive Bayes (NB), and Support Vector Machine (SVM), as illustrated in the DOE Diagram (Figure 1).
 
-The primary response is AUC-ROC. The Default dataset reveals a large class-imbalance leading to misleading overall accuracy. Models predicting non-defaulters for all observations achieve 97% accuracy yet have no discriminatory value. AUC-ROC measures each model's ability to distinguish defaulters from non-defaulters, where higher values indicate better discrimination, and is robust to class imbalance, making it the most appropriate metric (James et al. 2013).
+The primary response is AUC-ROC. The Default dataset reveals a large class-imbalance leading to misleading overall accuracy. Models predicting non-defaulters for all observations achieve 97% accuracy but have no discriminatory value. AUC-ROC measures each model's ability to distinguish defaulters from non-defaulters, where higher values indicate better discrimination, and is robust to class imbalance, making it the most appropriate metric (James et al. 2013).
 
 The experiment is subject to three principles of experimental design (Montgomery 2020). Randomisation is conducted through random observation assignment to cross-validation (CV) folds with set.seed(123). Replication is achieved via repeated 10-fold CV with 5 repeats, producing 50 resamples, each serving as an experimental unit. Blocking treats each resample as a block; all algorithms are evaluated under identical splits, controlling fold-to-fold variation . Residual diagnostics are conducted prior to formal RBD ANOVA interpretation.
 
-(197 words)
 
-```{r Data Obtain and Inspect, echo = FALSE}
+```{r DOE Diagram, echo = FALSE, fig.cap="Figure 1: DOE diagram for Default Experiment" }
+knitr::include_graphics("DOE_Diagram.png")
+```
+
+# Performance Results
+
+```{r Data Obtain and Inspect, echo = FALSE, include = FALSE}
 set.seed(123)
 #Obtaining and inspecting the data
 data(Default)
@@ -57,25 +58,7 @@ table(Default$default)
 
 ```
 
->>>>>>> a04943a732f52b70d23efbb765f19d06209d7726
-```{r DOE Diagram, echo = FALSE, fig.cap="Figure 1: DOE diagram for Default Experiment" }
-knitr::include_graphics("DOE_Diagram.png")
-```
-
-# Machine Learning Algorithms Comparison
-
-## QUESTION 2: Experimental Design
-
-A randomized block ANOVA was performed with algorithm as the treatment factor and resamples as the block factor. The results results that there was a statistical difference in the ROC means across algorithms at a the 5% significance level (p < 0.001), which means not all algorithms performed equally. Turkey HSD pairwise comparisons showed that Logistic Regression significantly outperformed Random Forrest and SVM (p < 0.001) but that it was not significantly different from Naive Bayes (p = 0.248). This suggests that Logistic Regression are statistically comparable in terms of performance. All other pairwise comparisons were significant at 5% level.
-
-The estimated marginals means further justify this as they show that Logistic Regression had the highest ROC mean (0.949) and Naive Bayes had quite similar result (0.942) while Random Forrest and SVM performed worse, 0.896 and 0.926 respectively.
-
-Assumption checks shows that normality of residuals was satisfied; however, homogeneity of variance was violated as seen in the Bartlett and Levene tests. Inspite of this, ANOVA is known to be relatively robust to these violations in cases where there is large number of replications. To support these findings, a non-parametric Friedman test was also conducted which confirmed a significant difference between algorithms (p < 0.001) which helped justify the conclusions drawn from ANOVA.
-
-Overall, the results suggest that Logistic Regression and Naive Bayes as the best performing algorithms while Random forrest and SVM perform less effectively under this experimental design. 
-
-(239 words)
-
+The Default dataset contained 9,667 non-defaulters and 333 defaulters (3.33%) confirming severe class imbalance and justifying AUC-ROC as the primary response. Figure 2 presents the distribution of AUC-ROC for each algorithm. Logistic Regression and Naive Bayes visually showed consistently high ROC values with narrow spread, while Random Forest exhibited the lowest median and SVM showed the widest variability.
 
 ```{r Control, echo = FALSE}
 set.seed(123)
@@ -87,7 +70,7 @@ ctrl <- trainControl(method = "repeatedcv",
                      savePredictions = TRUE)
 ```
 
-```{r Model Training, echo = FALSE}
+```{r Model Training, echo = FALSE, include = FALSE}
 #Training the models
 set.seed(123)
 PP <- c("center", "scale")
@@ -129,15 +112,6 @@ View(res$values)
 ```
 
 
-
-```{r ROC Plot, echo = FALSE}
-#Creates resamples that compares ROC across 30 resamples 
-bwplot(res, metric = "ROC",
-       main = "ROC AUC across 50 resamples (5×10 repeated CV)")
-```
-
-
-
 ```{r include = FALSE}
 
 res_df <- as.data.frame(res)
@@ -150,32 +124,40 @@ res_long <- pivot_longer(res_df,
 
 ```
 
-```{r AUC-ROC Boxplot, echo = FALSE}
+```{r AUC-ROC Boxplot, echo = FALSE, fig.cap= "Figure 2: AUC-ROC Boxplot across 50 resamples (5x10 repeated CV)"}
 res_long |>
   ggplot() +
   aes(x = ROC, y = Model) +
   geom_boxplot() +
-  geom_point(aes(colour = Resample), size = 0.6, show.legend = FALSE) +
-  labs(y     = "Models",
-       x     = "AUC-ROC",
-       title = "Figure 2: AUC-ROC across 50 resamples (5×10 repeated CV)") +
+  geom_point(aes(colour = Resample), size = 1, show.legend = FALSE) +
+  labs(y     = "Algorithms",
+       x     = "AUC-ROC") +
   theme_bw()
 ```
 
 
-<<<<<<< HEAD
-```{r Residual Diagnostic Plots, echo = FALSE}
-=======
-```{r Residual Diagnostic Plots}
-library(car)
->>>>>>> c6eb8962613ce6173c7292f3c6e0dbe610287748
+ The RBD ANOVA results show a statistically significant difference in mean AUC-ROC across algorithms at the 5% significance level (p < 0.001), indicating not all algorithms performed equally. A Tukey HSD pairwise comparison showed that Logistic Regression significantly outperformed Random Forest and SVM (p < 0.001) but that it was not significantly different from Naive Bayes (p = 0.248). All other pairwise comparisons were significant at the 5% level. This suggests that Logistic Regression and Naive Bayes are statistically comparable in terms of performance. The estimated marginal means further support the statistical comparability as Logistic Regression had the highest ROC mean (0.949) and Naive Bayes had a similar result (0.942), while Random Forest (0.896) and SVM (0.926) performed worse.
+
+Assumption checks confirm that normality of residuals was satisfied (p = 0.063); however, homogeneity of variance was violated as seen in the Bartlett and Levene tests (p < 0.001). A log transformation was attempted but did not resolve the violation as AUC-ROC values are bounded and approximately symmetric. Despite this, ANOVA is known to be relatively robust to these violations in balanced designs with equal sample sizes (n = 50 per algorithm). As ANOVA assumptions were not fully satisfied, a Friedman test was conducted as a non-parametric sensitivity check confirming a significant difference between algorithms (p < 0.001), supporting the conclusions drawn from the ANOVA.
+
+Overall, Logistic Regression and Naive Bayes were the best performing algorithms while Random Forest and SVM performed less effectively under this experimental design. 
+
+
+```{r Residual Diagnostic Plots, include = FALSE}
 
 res_aov <- aov(ROC ~ Model + Resample, data = res_long)
 
 # visual checks
 par(mfrow = c(2, 2))
 plot(res_aov) 
+
+
 #head(res_aov)
+
+
+```
+
+```{r Residual Diagnostic Tests, include = FALSE}
 
 # normality test on residuals
 shapiro.test(residuals(res_aov))
@@ -188,31 +170,31 @@ leveneTest(ROC ~ Model, data = res_long)
 # : p > 0.05, do not reject H0, normality is satisfied
 # Bartlett: p < 0.05, reject H0, equal variance is not satisfied
 
-
 ```
 
 
-
-```{r Residual Diagnostic Plots Log-Transformation, echo = FALSE}
+```{r Residual Diagnostic Plots Log-Transformation, include = FALSE}
 
 # log transform, H0 = equal medians / equal geometric means
 
-y <- log(res_long$ROC)
+ROC_log <- log(res_long$ROC)
 
-res_log_aov <- aov(y ~ Model + Resample, data = res_long)
+res_log_aov <- aov(ROC_log ~ Model + Resample, data = res_long)
 
 par(mfrow = c(2, 2))
 plot(res_log_aov)
 
-
-shapiro.test(residuals(res_log_aov))
-bartlett.test(y ~ Model, data = res_log_aov$model)
-leveneTest(y ~ Model, data = res_long)
-
-# The log transformation makes the model worse. Proceed with initial model
-
 ```
 
+```{r Residual Diagnostic Tests Log-Transformation, include = FALSE}
+
+
+shapiro.test(residuals(res_log_aov))
+bartlett.test(ROC_log ~ Model, data = res_log_aov$model)
+leveneTest(ROC_log ~ Model, data = res_long)
+
+# The log transformation makes the model worse. Proceed with initial model
+```
 
 
 ```{r ANOVA Test, include = FALSE}
@@ -221,37 +203,28 @@ anova(res_aov)
 # p < 0.001 indicates significant difference among algorithms. 
 ```
 
-
 ```{r Friedman Test, include = FALSE}
 friedman.test(ROC ~ Model | Resample, data = res_long)
 ```
-
-
 
 ```{r Tukey HSD, echo = FALSE, include = FALSE}
 tukey_res <- TukeyHSD(res_aov, which = "Model")
 tukey_res
 ```
 
-<<<<<<< HEAD
 ```{r Emmeans, include = FALSE}
 
-=======
-```{r}
-library(emmeans)
->>>>>>> c6eb8962613ce6173c7292f3c6e0dbe610287748
 emmeans(res_aov, ~ Model)
 ```
 
+# Algorithm Recommendation
 
-##QUESTION 3: Algorithm Recommendation
+Based on the experimental results, Logistic Regression is recommended for predicting credit card default. It had the highest mean AUC-ROC and showed consistency across resamples, demonstrating strong discrimination and stability. Though Naive Bayes was not significantly worse, Logistic Regression achieved higher mean specificity (0.319 vs 0.169), making it more effective for identifying default cases.
 
-Based on the experimental results, Logistic Regression is recommended for predicting credit card default. It had the highest point estimate ROC and showed consistency across resamples (blocks), demonstrating strong discrimination and stability. Though Naive Bayes was not significantly worse, Logistic Regression also provided a much higher specificity making it more effective for identifying default cases.
+A limitation of this recommendation is that it is based on a single dataset and a specific resampling design, therefore, the results may differ when presented with new or differently distributed data. Additionally, Logistic Regression assumes a linear decision boundary, which may not hold in complex real-world credit datasets.
 
-A limitation of this recommendation is that it is based on a singular dataset and the chosen resampling design, therefore, the results may differ when presented with new data.
-(84 words)
 
-## References
+# References
 
 James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2013. *An Introduction to Statistical Learning*. Vol. 112. New York: Springer.
 
